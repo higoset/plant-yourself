@@ -10,7 +10,7 @@ var Player = function(n, s){
         Name: n,
         Socket: s,
         Score: 0,
-        Voted: false,
+        Vote: 0,
         It: false,
     };
     
@@ -56,6 +56,10 @@ server.listen(8000);
 
 var listener = io.listen(server);
 
+var round = {
+    correct: 0
+}
+
 listener.sockets.on('connection', function(socket){
     
     if(numPlayers < 9)
@@ -88,6 +92,16 @@ listener.sockets.on('connection', function(socket){
     
     socket.on('client_data', function(data){
         socket.emit(data);
+        
+        for(var i = 0; i < numPlayers; i++){
+            if(data.name == players[i].Name){
+                console.log(data);
+                players[i].Vote = data.choice;
+            }
+        }
+        
+        if(checkVotes())
+            endRound();
     })
     
     socket.on('start', function(){
@@ -102,4 +116,52 @@ function updatePlayers(data){
 
 function startRound(){
     host.Socket.emit('roundStartHost');
+    
+    var it = Math.floor(Math.random() * numPlayers);
+    
+    for(var i = 0; i < numPlayers; i++){
+        if(i == it){
+            round.correct = getRandomLetter();
+            players[i].Socket.emit('it', round.correct);
+            players[i].It = true;
+        }
+        else{
+            players[i].Socket.emit('notIt', players[it].Name);
+        }
+    }
+}
+
+function getRandomLetter(){
+    
+    var num = Math.floor(Math.random() * 3);
+    
+    switch(num){
+        case 0:
+            return "A";
+        case 1:
+            return "B";
+        case 2:
+            return "C";
+    }
+    
+}
+
+function checkVotes(){
+    for(var i = 0; i < numPlayers; i++){
+        if(players[i].Vote == 0 && !players[i].It)
+            return false;
+    }
+    return true;
+}
+
+function endRound(){
+    for(var i = 0; i < numPlayers; i++){
+        if(players[i].Vote == round.correct){
+            players[i].Socket.emit('correct');
+            players[i].score++;
+        }
+        else
+            players[i].Socket.emit('wrong');
+            
+    }
 }
