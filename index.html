@@ -16,9 +16,9 @@
     <div id="players" style="font-weight: bold">Players: <br /></div>
 
     <button id="Button1" onClick="start()">Start!</button>
-    <button id="ButtonA" onClick="sendA()">A</button>
-    <button id="ButtonB" onClick="sendB()">B</button>
-    <button id="ButtonC" onClick="sendC()">C</button>
+    <button id="ButtonA" onClick="send1()">A</button>
+    <button id="ButtonB" onClick="send2()">B</button>
+    <button id="ButtonC" onClick="send3()">C</button>
     <div id="gameZone" style="font-weight: bold"></div>
 
     <script>
@@ -76,11 +76,11 @@
             $('#status').text("You were wrong! :(");
         })
 
-        socket.on('roundStartHost', function(){
+        socket.on('roundStartHost', function(data){
             clearPage();
             var playArea = document.getElementById("gameZone");
             playArea.style.display = "block";
-            playArea.innerHTML = "<table style='width: 32px;'> <tbody> <tr> <td style='width: 10.4px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/round.png' alt='' /></td> <td style='width: 10px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/saguaro1.png' alt='' /></td> <td style='width: 10px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/acacia1.png' alt='' /></td> </tr><tr><td style='width: 10.4px; text-align: center; font-size: 20pt'>A</td><td style='width: 10px; text-align: center; font-size: 20pt'>B</td><td style='width: 10px; text-align: center; font-size: 20pt'>C</td></tr></tbody></table>";
+            playArea.innerHTML = "<table style='width: 32px;'> <tbody> <tr> <td style='width: 10.4px;'><img src=" + data.picture1 + " alt='' /></td> <td style='width: 10px;'><img src=" + data.picture2 + " alt='' /></td> <td style='width: 10px;'><img src=" + data.picture3 + " alt='' /></td> </tr><tr><td style='width: 10.4px; text-align: center; font-size: 20pt'>1</td><td style='width: 10px; text-align: center; font-size: 20pt'>2</td><td style='width: 10px; text-align: center; font-size: 20pt'>3</td></tr></tbody></table>";
         })
 
         socket.on('it', function(data){
@@ -98,25 +98,46 @@
             var bc = document.getElementById("ButtonC");
             bc.style.display = "block";
         })
-
-        function sendA(){
-            socket.emit('client_data', {name: myID, choice:'A'});
+        
+        socket.on('roundEnd', function(data){
             clearPage();
-            $('#status').text("You said A!");
+            if(data != 1)
+                $('#status').text(data + " people guessed your plant!");
+            else
+                $('#status').text(data + " person guessed your plant!");
+        })
+        
+        socket.on('leaderBoard', function(data){
+            clearPage();
+            
+            var d = document.getElementById("gameZone");
+            d.innerHTML = '';
+            d.style.display = 'block';
+            
+            for(var i = 0; i < data.length; i++){
+                d.innerHTML = d.innerHTML + data[i].Name + " (" + data[i].Score + ") <br />";
+            }
+            
+        })
+
+        function send1(){
+            socket.emit('client_data', {name: myID, choice: 1});
+            clearPage();
+            $('#status').text("You said 1!");
         }
 
-        function sendB(){
-            socket.emit('client_data', {name: myID, choice:'B'});
+        function send2(){
+            socket.emit('client_data', {name: myID, choice: 2});
             clearPage();
-            $('#status').text("You said B!");
+            $('#status').text("You said 2!");
         }
 
-        function sendC(){
-            socket.emit('client_data', {name: myID, choice:'C'});
+        function send3(){
+            socket.emit('client_data', {name: myID, choice: 3});
             clearPage();
-            $('#status').text("You said C!");
+            $('#status').text("You said 3!");
         }
-
+        
         socket.on('A', function(){
 
             var img = document.getElementById("eye");
