@@ -1,0 +1,144 @@
+<head>
+    <script src='socket.io/socket.io.js'></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.js"></script>  
+    <div style="display: none;">
+        <img id="eye" src="http://users.wpi.edu/~ejcerini/Pictures/round.png" />
+    </div>
+</head>
+<body style="background-color: rgba(135, 0, 188, 1);">
+
+    <div id="status" style="font-weight: bold">This is our socket.io file.</div>
+    <div id="players" style="font-weight: bold">Players: <br /></div>
+
+    <img src="https://s1.postimg.org/3v9fkglr3/button_1.png" id="1Button" onClick="sendA()"/>
+    <img src="https://s18.postimg.org/acweh3ojt/button_2.png"id= "2Button"  onClick ="sendB()" />
+    <img src="https://s18.postimg.org/uljs2tnux/button_3.png"id="3Button" onClick ="sendC()" />
+    <img src="https://s16.postimg.org/ow5nxbc91/start_button.png"id="startButton" onClick ="start()" />
+
+    <button id="Button1" onClick="start()">Start!</button>
+    <button id="ButtonA" onClick="sendA()">A</button>
+    <button id="ButtonB" onClick="sendB()">B</button>
+    <button id="ButtonC" onClick="sendC()">C</button>
+    <div id="gameZone" style="font-weight: bold"></div>
+
+    <script>
+        var socket = io.connect();
+        
+        var myID = 0;
+
+        socket.on('starter', function(){
+            clearPage();
+            $('#status').text("Press the start button when ready!");
+            var button = document.getElementById("Button1");
+            button.textContent = "Start!";
+            button.style.display = 'block';
+            button.onclick = function(){
+                socket.emit('start');
+            }
+        });
+        
+        socket.on('host', function(){
+            clearPage()
+            $('#status').text("Waiting for more players...");
+            
+        });
+        
+        socket.on('wait', function(){
+            clearPage()
+            $('#status').text("Please wait for the host to start the game!");
+            var button = document.getElementById("Button1");
+
+        });
+        
+        socket.on('prompt', function(){
+            clearPage();
+            var name = prompt("Please enter your name!", "name")
+            if(name != null){
+                socket.emit('name', name);
+                myID = name;
+            }
+        })
+        
+        socket.on('new', function(data){
+            var p = document.getElementById("players");
+            p.style.display = "block";
+            p.innerHTML = p.innerHTML + data + '<br />';
+        })
+        
+        socket.on('correct', function(data){
+            clearPage();
+            $('#status').text("You were right! :D");
+        })
+        
+        socket.on('wrong', function(data){
+            clearPage();
+            $('#status').text("You were wrong! :(");
+        })
+        
+        socket.on('roundStartHost', function(){
+            clearPage();
+            var playArea = document.getElementById("gameZone");
+            playArea.style.display = "block";
+            playArea.innerHTML = "<table style='width: 32px;'> <tbody> <tr> <td style='width: 10.4px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/round.png' alt='' /></td> <td style='width: 10px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/saguaro1.png' alt='' /></td> <td style='width: 10px;'><img src='http://users.wpi.edu/~ejcerini/Pictures/acacia1.png' alt='' /></td> </tr><tr><td style='width: 10.4px; text-align: center; font-size: 20pt'>A</td><td style='width: 10px; text-align: center; font-size: 20pt'>B</td><td style='width: 10px; text-align: center; font-size: 20pt'>C</td></tr></tbody></table>";
+        })
+        
+        socket.on('it', function(data){
+            clearPage();
+            $('#status').text("You're it! Be plant: " + data);
+        })
+        
+        socket.on('notIt', function(data){
+            clearPage();
+            $('#status').text(data + " is it! What plant are they?");
+            var ba = document.getElementById("ButtonA");
+            ba.style.display = "block";
+            var bb = document.getElementById("ButtonB");
+            bb.style.display = "block";
+            var bc = document.getElementById("ButtonC");
+            bc.style.display = "block";
+        })
+        
+        function sendA(){
+            socket.emit('client_data', {name: myID, choice:'A'});
+            clearPage();
+            $('#status').text("You said A!");
+        }
+        
+        function sendB(){
+            socket.emit('client_data', {name: myID, choice:'B'});
+            clearPage();
+            $('#status').text("You said B!");
+        }
+        
+        function sendC(){
+            socket.emit('client_data', {name: myID, choice:'C'});
+            clearPage();
+            $('#status').text("You said C!");
+        }
+        
+        socket.on('A', function(){
+            
+            var img = document.getElementById("eye");
+            ctx.drawImage(img, 0, 20, 50, 50);
+            ctx.drawImage(img, width*(1/4), 20, 50, 50);
+            ctx.drawImage(img, width*(2/4), 20, 50, 50);
+
+        });
+        
+        function clearPage(){
+            var p = document.getElementById("players");
+            p.style.display = "none";
+            var b1 = document.getElementById("Button1");
+            b1.style.display = "none";
+            var ba = document.getElementById("ButtonA");
+            ba.style.display = "none";
+            var bb = document.getElementById("ButtonB");
+            bb.style.display = "none";
+            var bc = document.getElementById("ButtonC");
+            bc.style.display = "none";
+            var playArea = document.getElementById("gameZone");
+            playArea.style.display = "none";
+        }
+
+    </script>
+</body>
