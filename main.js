@@ -21,27 +21,27 @@ var numPlayers = 0;
 var host = null;
 
 var images = [
-    'http://users.wpi.edu/~ejcerini/Pictures/saguaro1.png',
+    ['http://users.wpi.edu/~ejcerini/Pictures/saguaro1.png',
     'http://users.wpi.edu/~ejcerini/Pictures/acacia1.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/round.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/afro.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/banan.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/beet.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/borb.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/corn.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/downed.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/droopy.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/fern.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/joe.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/leaf.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/palm.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/ploopy.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/rose.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/sky.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/round.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/ploopy.png',
     'http://users.wpi.edu/~ejcerini/Pictures/spiky.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/strawberry.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/tube.png',
-    'http://users.wpi.edu/~ejcerini/Pictures/tulip.png'    
+    'http://users.wpi.edu/~ejcerini/Pictures/tulip.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/borb.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/beet.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/strawberry.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/tube.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/corn.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/fern.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/palm.png',
+     'http://users.wpi.edu/~ejcerini/Pictures/afro.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/sky.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/banan.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/downed.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/droopy.png'],
+    ['http://users.wpi.edu/~ejcerini/Pictures/joe.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/leaf.png',
+    'http://users.wpi.edu/~ejcerini/Pictures/rose.png']
 ];
 
 
@@ -62,14 +62,31 @@ var listener = io.listen(server);
 
 var round = function(){
     
+    var set = -1;
+    var done = true; 
     var rand = [-1,-1,-1];
+        
+    if(imgPicked.length == images.length)
+        imgPicked = [];
+    
+    do{
+        done = true;
+        set = Math.floor(Math.random() * images.length);
+        if(done){
+            for(var j = 0; j < imgPicked.length; j++){
+                if(set == imgPicked[j])
+                    done = false;
+            }
+        }
+        imgPicked.push(set);
+    }while(!done);
     
     for(var i = 0; i < 3; i++){
-        var done = true; 
         var int;
+        
         do{
             done = true;
-            int = Math.floor(Math.random() * images.length);
+            int = Math.floor(Math.random() * images[set].length);
             for(var j = 0; j < i; j++){
                 if(int == rand[j])
                     done = false;
@@ -79,18 +96,41 @@ var round = function(){
         rand[i] = int;
     }
     
+    var isIt;
+    
+    if(beenIt.length == numPlayers){
+        beenIt = [];
+    }
+    
+    do{
+        done = true;
+        isIt = Math.floor(Math.random() * numPlayers);
+        for(var j = 0; j < beenIt.length; j++){
+            if(isIt == beenIt[j])
+                done = false;
+        }
+    }while(!done);
+        
+    
     var ret = {
-        it: Math.floor(Math.random() * numPlayers),
-        picture1: images[rand[0]],
-        picture2: images[rand[1]],
-        picture3: images[rand[2]],
+        it: isIt,
+        itName: players[isIt].Name,
+        picture1: images[set][rand[0]],
+        picture2: images[set][rand[1]],
+        picture3: images[set][rand[2]],
         correct: Math.floor(Math.random() * 3) + 1
     }
+    
+    beenIt.push(isIt);
     
     return ret;
 }
 
 var r;
+
+var beenIt = [];
+
+var imgPicked = [];
 
 listener.sockets.on('connection', function(socket){
 
@@ -188,7 +228,12 @@ function endRound(){
     
     var sorted = sort(players);
     
-    host.Socket.emit('leaderBoard', sorted);
+    host.Socket.emit('leaderBoard', {p: sorted, round: r});
+    
+    for(var i = 0; i < numPlayers; i++){
+        players[i].It = false;
+        players[i].Vote = 0;
+    }
     
 }
 

@@ -6,22 +6,30 @@
         <img id="eye" src="http://users.wpi.edu/~ejcerini/Pictures/round.png" />
     </div>
     <style>
-    body{background: rgba(135, 0, 188, 1); font-family: verdana; color: #000; padding: 30px;}
+        body{background: rgba(135, 0, 188, 1); font-family: verdana; color: #000; padding: 30px; text-align: center}
+        img{margin: 0 auto}
     </style>
 </head>
 <body>
 
-    <div id="status" style="font-weight: bold">This is our socket.io file.</div>
+    <h1 id="status" style="font-weight: bold;">Welcome to Plant Yourself!</h1>
 
+    <div id="gameZone" style="font-weight: bold">
+        <img src='http://users.wpi.edu/~ejcerini/Pictures/plantyourself.png' width="40%" />
+    </div>
+    
     <div id="players" style="font-weight: bold">Players: <br /></div>
 
-    <button id="Button1" onClick="start()">Start!</button>
-    <button id="ButtonA" onClick="send1()">A</button>
-    <button id="ButtonB" onClick="send2()">B</button>
-    <button id="ButtonC" onClick="send3()">C</button>
-    <div id="gameZone" style="font-weight: bold"></div>
+    <img src="https://s1.postimg.org/3v9fkglr3/button_1.png" id="ButtonA" onClick= "send1()" />
+    <img src="https://s18.postimg.org/acweh3ojt/button_2.png" id= "ButtonB"  onClick= "send2()" />
+    <img src="https://s18.postimg.org/uljs2tnux/button_3.png" id="ButtonC" onClick= "send3()" />
+    <img src="https://s16.postimg.org/ow5nxbc91/start_button.png" id="Button1" onClick= "start()" />
+    <img src='http://users.wpi.edu/~ejcerini/Pictures/next.png' id="Button2" onClick= "start()" />
+    
+
 
     <script>
+        clearPage();
 
         var socket = io.connect();
 
@@ -31,24 +39,28 @@
             clearPage();
             $('#status').text("Press the start button when ready!");
             var button = document.getElementById("Button1");
-            button.textContent = "Start!";
             button.style.display = 'block';
-            button.onclick = function(){
-                socket.emit('start');
-            }
+            var d = document.getElementById("gameZone");
+            d.innerHTML = "The esteemed artist Jarostina von Manquil has traveled around the world for years, sketching plants of all shapes and sizes. But tragedy has struck! Her art show is in an hour, and she has lost her famous purple sketchbook! It is up to you and your friends to hold poses like the plants Jarostina has observed so she can recreate her masterpieces. <br /> <br /> One player will be asked to pose like a plant shown on their phone. The other players must vote on which plant they think is being imitated. The posing player is not allowed to give any hints about which plant they are. Each player who guesses correctly gets 1 point, and the posing player gets 1 point per player that guesses correctly. The player with the most points at the end wins! <br /> <br />"
+            d.style.display = 'block';
         });
 
         socket.on('host', function(){
             clearPage()
             $('#status').text("Waiting for more players...");
+            var p = document.getElementById("players");
+            p.style.display = "block";
+            var d = document.getElementById("gameZone");
+            d.style.display = 'block';
 
         });
 
         socket.on('wait', function(){
             clearPage()
             $('#status').text("Please wait for the host to start the game!");
-            var button = document.getElementById("Button1");
-
+            var d = document.getElementById("gameZone");
+            d.innerHTML = "The esteemed artist Jarostina von Manquil has traveled around the world for years, sketching plants of all shapes and sizes. But tragedy has struck! Her art show is in an hour, and she has lost her famous purple sketchbook! It is up to you and your friends to hold poses like the plants Jarostina has observed so she can recreate her masterpieces. <br /> <br /> One player will be asked to pose like a plant shown on their phone. The other players must vote on which plant they think is being imitated. The posing player is not allowed to give any hints about which plant they are. Each player who guesses correctly gets 1 point, and the posing player gets 1 point per player that guesses correctly. The player with the most points at the end wins! <br /> <br />"
+            d.style.display = 'block';
         });
 
         socket.on('prompt', function(){
@@ -79,6 +91,7 @@
         socket.on('roundStartHost', function(data){
             clearPage();
             var playArea = document.getElementById("gameZone");
+            $('#status').text(data.itName + " is it! Guess what plant they are!");
             playArea.style.display = "block";
             playArea.innerHTML = "<table style='width: 32px;'> <tbody> <tr> <td style='width: 10.4px;'><img src=" + data.picture1 + " alt='' /></td> <td style='width: 10px;'><img src=" + data.picture2 + " alt='' /></td> <td style='width: 10px;'><img src=" + data.picture3 + " alt='' /></td> </tr><tr><td style='width: 10.4px; text-align: center; font-size: 20pt'>1</td><td style='width: 10px; text-align: center; font-size: 20pt'>2</td><td style='width: 10px; text-align: center; font-size: 20pt'>3</td></tr></tbody></table>";
         })
@@ -105,17 +118,22 @@
                 $('#status').text(data + " people guessed your plant!");
             else
                 $('#status').text(data + " person guessed your plant!");
+            
+            var d = document.getElementById("Button2");
+            d.style.display = 'block';
         })
         
         socket.on('leaderBoard', function(data){
             clearPage();
             
+            $('#status').text(data.round.itName + " was posing as Plant " + data.round.correct + "!");
+            
             var d = document.getElementById("gameZone");
             d.innerHTML = '';
             d.style.display = 'block';
             
-            for(var i = 0; i < data.length; i++){
-                d.innerHTML = d.innerHTML + data[i].Name + " (" + data[i].Score + ") <br />";
+            for(var i = 0; i < data.p.length; i++){
+                d.innerHTML = d.innerHTML + data.p[i].Name + " (" + data.p[i].Score + ") <br />";
             }
             
         })
@@ -137,15 +155,9 @@
             clearPage();
             $('#status').text("You said 3!");
         }
-        
-        socket.on('A', function(){
-
-            var img = document.getElementById("eye");
-            ctx.drawImage(img, 0, 20, 50, 50);
-            ctx.drawImage(img, width*(1/4), 20, 50, 50);
-            ctx.drawImage(img, width*(2/4), 20, 50, 50);
-
-        });
+        function start(){
+            socket.emit('start');
+        }
 
         function clearPage(){
             var p = document.getElementById("players");
@@ -160,6 +172,8 @@
             bc.style.display = "none";
             var playArea = document.getElementById("gameZone");
             playArea.style.display = "none";
+            var bn = document.getElementById("Button2");
+            bn.style.display = "none";
         }
 
         //prints a fun message if a user hits the 'y' key...
