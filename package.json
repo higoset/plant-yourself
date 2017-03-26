@@ -1,0 +1,31 @@
+{
+  "name": "plant_yourself",
+  "version": "1.0.0",
+  "description": "Fun party game where can become a plant!",
+  "main": "main.js",
+  "dependencies": {
+    "http-dispatcher": "^0.2.2",
+    "httpdispatcher": "^2.0.1",
+    "socket.io": "^1.7.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/higoset/plant-yourself.git"
+  },
+  "keywords": [
+    "plant",
+    "yourself",
+    "party",
+    "game"
+  ],
+  "author": "Leo Bunyea, Erik Cerini, Kate Olguin",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/higoset/plant-yourself/issues"
+  },
+  "homepage": "https://github.com/higoset/plant-yourself#readme"
+}

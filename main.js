@@ -3,8 +3,7 @@ var io = require('socket.io')(server);
 var url = require('url');
 var fs = require('fs');
 
-console.log("Server listening on Port 8000");
-
+//Player object contructor
 var Player = function(n, s){
     var ret = {
         Name: n,
@@ -13,7 +12,7 @@ var Player = function(n, s){
         Vote: 0,
         It: false,
     };
-    
+
     return ret;
 }
 
@@ -22,37 +21,16 @@ var numPlayers = 0;
 var host = null;
 
 var server = http.createServer(function(request, response){
-        var path = url.parse(request.url).pathname;
-
-        switch(path){
-            case '/':
-                response.writeHead(200, {'Content-Type': 'text/html'});
-                response.write('hello world');
-                response.end();
-                break;
-            case '/index.html':
-                fs.readFile(__dirname + path, function(error, data){
-                    if (error){
-                        response.writeHead(404);
-                        response.write("oops this doesn't exist - 404");
-                        response.end();
-                    }
-                    else{
-                        response.writeHead(200, {"Content-Type": "text/html"});
-                        response.write(data, "utf8");
-                        response.end();
-                    }
-                });
-                break;
-            default:
-                response.writeHead(404);
-                response.write("oops this doesn't exist - 404");
-                response.end();
-                break;
-        }
-    });
-
+  if(req.url === '/'){
+    res.writeHead(200, {'Content-Type': 'text/html'});
+    fs.createReadStream(__dirname + '/index.html').pipe(res);
+  } else {
+    res.writeHead(404, {'Content-Type': 'text/html'});
+    fs.createReadStream(__dirname + '/404.html').pipe(res);
+  }
+});
 server.listen(8000);
+console.log("Server listening on Port 8000");
 
 var listener = io.listen(server);
 
@@ -61,14 +39,14 @@ var round = {
 }
 
 listener.sockets.on('connection', function(socket){
-    
+
     if(numPlayers < 9)
         socket.emit('prompt');
     else
         socket.emit('full');
-    
+
     socket.on('name', function(data){
-        
+
         if(host == null){
             socket.emit('host');
             host = Player('host', socket);
@@ -89,25 +67,25 @@ listener.sockets.on('connection', function(socket){
             numPlayers++;
         }
     });
-    
+
     socket.on('client_data', function(data){
         socket.emit(data);
-        
+
         for(var i = 0; i < numPlayers; i++){
             if(data.name == players[i].Name){
                 console.log(data);
                 players[i].Vote = data.choice;
             }
         }
-        
+
         if(checkVotes())
             endRound();
     })
-    
+
     socket.on('start', function(){
         startRound();
     })
-    
+
 });
 
 function updatePlayers(data){
@@ -116,9 +94,9 @@ function updatePlayers(data){
 
 function startRound(){
     host.Socket.emit('roundStartHost');
-    
+
     var it = Math.floor(Math.random() * numPlayers);
-    
+
     for(var i = 0; i < numPlayers; i++){
         if(i == it){
             round.correct = getRandomLetter();
@@ -132,9 +110,9 @@ function startRound(){
 }
 
 function getRandomLetter(){
-    
+
     var num = Math.floor(Math.random() * 3);
-    
+
     switch(num){
         case 0:
             return "A";
@@ -143,7 +121,7 @@ function getRandomLetter(){
         case 2:
             return "C";
     }
-    
+
 }
 
 function checkVotes(){
@@ -162,6 +140,6 @@ function endRound(){
         }
         else
             players[i].Socket.emit('wrong');
-            
+
     }
 }
